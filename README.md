@@ -5,6 +5,9 @@ This project is a RESTful API server that creates an audio from a text based on 
 > [!NOTE]
 > The project is still under active development. The existing features still need to be improved and more features will be added in the future.
 
+> [!WARNING]
+> tts-api-serve ONLY supports Linux platform for now! The support for other platforms will be added in the future.
+
 ## Quick Start
 
 ### Setup
