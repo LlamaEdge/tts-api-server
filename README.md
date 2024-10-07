@@ -57,7 +57,7 @@ This project is a RESTful API server that creates an audio from a text based on 
 - Download tts-api-server.wasm
 
   ```bash
-  curl -LO
+  curl -LO https://github.com/LlamaEdge/tts-api-server/releases/latest/download/tts-api-server.wasm
   ```
 
 - Start server
