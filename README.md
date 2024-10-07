@@ -91,10 +91,32 @@ This project is a RESTful API server that creates an audio from a text based on 
 
 ## Build
 
+- For **Linux users**
+
+  ```bash
+  cargo build --release
+  ```
+
+- For **macOS users**
+
+  - Download the `wasi-sdk` from the [official website](https://github.com/WebAssembly/wasi-sdk/releases) and unzip it to the directory you want.
+
+  - Build the project
+
+    ```bash
+    export WASI_SDK_PATH=/path/to/wasi-sdk
+    export CC="${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SDK_PATH}/share/wasi-sysroot"
+    cargo clean
+    cargo update
+    cargo build --release
+    ```
+
+If the build process is successful, `tts-api-server.wasm` will be generated in `target/wasm32-wasip1/release/`.
+
 ### CLI Options
 
 ```bash
-$ wasmedge ./target/wasm32-wasip1/release/tts-api-server.wasm -h
+$ wasmedge tts-api-server.wasm -h
 Whisper API Server
 
 Usage: tts-api-server.wasm [OPTIONS] --model-name <MODEL_NAME> --model <MODEL> --config <CONFIG> --espeak-ng-dir <ESPEAK_NG_DIR>
