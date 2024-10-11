@@ -331,9 +331,9 @@ checksum = "428d9aa8fbc0670b7b8d6030a7fadd0f86151cae55e4dbbece15f3780a3dfaf3"
 
 [[package]]
 name = "cc"
-version = "1.1.28"
+version = "1.1.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e80e3b6a3ab07840e1cae9b0666a63970dc28e8ed5ffbcdacbfc760c281bfc1"
+checksum = "58e804ac3194a48bb129643eb1d62fcc20d18c6b8c181704489353d13120bcd1"
 dependencies = [
  "jobserver",
  "libc",
@@ -359,7 +359,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "chat-prompts"
 version = "0.17.0"
-source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=feat-support-piper#9d5233e94093a36fa4846cc0d3b7f0f78b02485d"
+source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=dev#4164cd2a2825387f692cfea751baffaf27693ee7"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -605,7 +605,7 @@ dependencies = [
 [[package]]
 name = "endpoints"
 version = "0.15.1"
-source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=feat-support-piper#9d5233e94093a36fa4846cc0d3b7f0f78b02485d"
+source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=dev#4164cd2a2825387f692cfea751baffaf27693ee7"
 dependencies = [
  "indexmap",
  "serde",
@@ -1292,7 +1292,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 [[package]]
 name = "llama-core"
 version = "0.19.4"
-source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=feat-support-piper#9d5233e94093a36fa4846cc0d3b7f0f78b02485d"
+source = "git+https://github.com/LlamaEdge/LlamaEdge.git?branch=dev#4164cd2a2825387f692cfea751baffaf27693ee7"
 dependencies = [
  "base64 0.22.1",
  "chat-prompts",
@@ -2894,7 +2894,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tts-api-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
