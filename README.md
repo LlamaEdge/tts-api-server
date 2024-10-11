@@ -63,7 +63,11 @@ This project is a RESTful API server that creates an audio from a text based on 
 - Start server
 
   ```bash
-  wasmedge --dir .:. tts-api-server.wasm
+  wasmedge --dir .:. tts-api-server.wasm \
+    --model-name piper \
+    --model en_US-lessac-medium.onnx \
+    --config en_US-lessac-medium.onnx.json \
+    --espeak-ng-dir ./espeak-ng-data
   ```
 
   > [!TIP]
@@ -78,7 +82,7 @@ This project is a RESTful API server that creates an audio from a text based on 
     --header 'Content-Type: application/json' \
     --data '{
       "model": "piper",
-      "input": "This is a audio speech test",
+      "input": "This is an audio speech test",
       "response_format": "wav",
       "speed": 1.0
     }'
