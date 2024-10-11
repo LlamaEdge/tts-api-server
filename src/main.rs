@@ -16,6 +16,7 @@ use hyper::{
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, path::PathBuf};
 use tokio::net::TcpListener;
+use llama_core::metadata::piper::PiperMetadata;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -83,8 +84,11 @@ async fn main() -> Result<(), ServerError> {
     // log espeak-ng data directory
     info!(target: "stdout", "espeak-ng data directory: {}", cli.espeak_ng_dir.display());
 
+    // create a default metadata
+    let metadata = PiperMetadata::default();
+
     // init the piper context
-    llama_core::init_piper_context(cli.model, cli.config, cli.espeak_ng_dir)
+    llama_core::init_piper_context(&metadata, cli.model, cli.config, cli.espeak_ng_dir)
         .map_err(|e| ServerError::Operation(e.to_string()))?;
 
     // socket address
