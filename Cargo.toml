@@ -5,18 +5,30 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.80"
-clap = { version = "4.4.6", features = ["cargo"] }
+clap = { version = "4.4.6", features = ["cargo", "derive"] }
 endpoints = { version = "=0.16.0" }
 hyper = { version = "0.14", features = ["full"] }
-llama-core = { version = "=0.20.0", features = ["logging"] }
+llama-core = { version = "=0.20.0", features = ["logging"], optional = true }
 log = { version = "0.4.21", features = ["std", "kv", "kv_serde"] }
 multipart-2021 = "0.19.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1"
-tokio = { version = "^1.36", features = ["io-util", "fs", "net", "time", "rt", "macros"] }
+tokio = { version = "^1.36", features = [
+    "io-util",
+    "fs",
+    "net",
+    "time",
+    "rt",
+    "macros",
+] }
 uuid = { version = "1.4", features = ["v4", "fast-rng", "macro-diagnostics"] }
 wasi-logger = { version = "0.1.2", features = ["kv"] }
+
+[features]
+default = ["piper"]
+piper = ["llama-core"]
+gpt_sovits = []
 
 [patch.crates-io]
 socket2 = { git = "https://github.com/second-state/socket2.git", branch = "v0.5.x" }
