@@ -6,14 +6,19 @@ use std::{fs, io::Write, path::Path, time::SystemTime};
 mod ffi {
     #[link(wasm_import_module = "gpt_sovits")]
     extern "C" {
-        pub fn infer(text_ptr: *const u8, text_len: usize) -> i32;
+        pub fn infer(
+            speaker_ptr: *const u8,
+            speaker_len: usize,
+            text_ptr: *const u8,
+            text_len: usize,
+        ) -> i32;
         pub fn get_output(output_buf: *mut u8, output_len: usize) -> i32;
     }
 }
 
-fn infer(text: &str) -> Result<Vec<u8>, &'static str> {
+fn infer(speaker: &str, text: &str) -> Result<Vec<u8>, &'static str> {
     unsafe {
-        let i = ffi::infer(text.as_ptr(), text.len());
+        let i = ffi::infer(speaker.as_ptr(), speaker.len(), text.as_ptr(), text.len());
         match i {
             -1 => Err("gpt_sovits infer error"),
             -2 => Err("gpt_sovits runtime error"),
@@ -30,7 +35,8 @@ fn infer(text: &str) -> Result<Vec<u8>, &'static str> {
 }
 
 fn create_speech(speech_request: SpeechRequest) -> anyhow::Result<FileObject> {
-    let result = infer(&speech_request.input).map_err(|e| anyhow::anyhow!(e))?;
+    let speaker = speech_request.speaker_id.unwrap_or(0).to_string();
+    let result = infer(&speaker, &speech_request.input).map_err(|e| anyhow::anyhow!(e))?;
     let output_size = result.len();
 
     // * save the audio data to a file
