@@ -1,7 +1,5 @@
 use crate::error;
-use endpoints::{audio::speech::SpeechRequest, files::FileObject};
 use hyper::{body::to_bytes, http::Method, Body, Request, Response};
-use std::{fs, io::Write, path::Path, time::SystemTime};
 
 mod ffi {
     #[link(wasm_import_module = "gpt_sovits")]
@@ -34,44 +32,18 @@ fn infer(speaker: &str, text: &str) -> Result<Vec<u8>, &'static str> {
     }
 }
 
-fn create_speech(speech_request: SpeechRequest) -> anyhow::Result<FileObject> {
-    let speaker = speech_request.speaker_id.unwrap_or(0).to_string();
-    let result = infer(&speaker, &speech_request.input).map_err(|e| anyhow::anyhow!(e))?;
-    let output_size = result.len();
+#[derive(Debug, serde::Deserialize)]
+pub struct SpeechRequest {
+    /// The text to generate audio for.
+    pub input: String,
+    /// Id of speaker.
+    pub speaker: String,
+}
 
-    // * save the audio data to a file
-
-    // create a unique file id
-    let id = format!("file_{}", uuid::Uuid::new_v4());
-
-    // save the file
-    let path = Path::new("archives");
-    if !path.exists() {
-        fs::create_dir(path).unwrap();
-    }
-    let file_path = path.join(&id);
-    if !file_path.exists() {
-        fs::create_dir(&file_path).unwrap();
-    }
-    let filename = "output.wav";
-    let mut audio_file = fs::File::create(file_path.join(filename))
-        .map_err(|e| anyhow::anyhow!("Failed to create the output file.{}", e))?;
-
-    audio_file.write_all(&result).unwrap();
-
-    let created_at = SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|_| anyhow::anyhow!("Failed to get the current time."))?
-        .as_secs();
-
-    Ok(FileObject {
-        id,
-        bytes: output_size as u64,
-        created_at,
-        filename: filename.to_owned(),
-        object: "file".to_owned(),
-        purpose: "assistants_output".to_owned(),
-    })
+fn create_speech(speech_request: SpeechRequest) -> anyhow::Result<Vec<u8>> {
+    let result =
+        infer(&speech_request.speaker, &speech_request.input).map_err(|e| anyhow::anyhow!(e))?;
+    Ok(result)
 }
 
 pub(crate) async fn audio_speech_handler(req: Request<Body>) -> Response<Body> {
@@ -125,23 +97,10 @@ pub(crate) async fn audio_speech_handler(req: Request<Body>) -> Response<Body> {
         }
     };
 
-    let file_obj = match create_speech(speech_request) {
+    let wav_data = match create_speech(speech_request) {
         Ok(obj) => obj,
         Err(e) => {
             let err_msg = format!("Failed to transcribe the audio. {}", e);
-
-            // log
-            error!(target: "stdout", "{}", &err_msg);
-
-            return error::internal_server_error(err_msg);
-        }
-    };
-
-    // serialize the file object
-    let s = match serde_json::to_string(&file_obj) {
-        Ok(s) => s,
-        Err(e) => {
-            let err_msg = format!("Failed to serialize the file object. {}", e);
 
             // log
             error!(target: "stdout", "{}", &err_msg);
@@ -155,8 +114,12 @@ pub(crate) async fn audio_speech_handler(req: Request<Body>) -> Response<Body> {
         .header("Access-Control-Allow-Origin", "*")
         .header("Access-Control-Allow-Methods", "*")
         .header("Access-Control-Allow-Headers", "*")
-        .header("Content-Type", "application/json")
-        .body(Body::from(s));
+        .header(hyper::header::CONTENT_TYPE, "audio/wav")
+        .header(
+            hyper::header::CONTENT_DISPOSITION,
+            "attachment; filename=audio.wav",
+        )
+        .body(Body::from(wav_data));
 
     let res = match result {
         Ok(response) => response,
