@@ -53,23 +53,10 @@ pub(crate) async fn audio_speech_handler(req: Request<Body>) -> Response<Body> {
         }
     };
 
-    let file_obj = match llama_core::audio::create_speech(speech_request).await {
+    let audio_buffer = match llama_core::audio::create_speech(speech_request).await {
         Ok(obj) => obj,
         Err(e) => {
             let err_msg = format!("Failed to transcribe the audio. {}", e);
-
-            // log
-            error!(target: "stdout", "{}", &err_msg);
-
-            return error::internal_server_error(err_msg);
-        }
-    };
-
-    // serialize the file object
-    let s = match serde_json::to_string(&file_obj) {
-        Ok(s) => s,
-        Err(e) => {
-            let err_msg = format!("Failed to serialize the file object. {}", e);
 
             // log
             error!(target: "stdout", "{}", &err_msg);
@@ -83,8 +70,9 @@ pub(crate) async fn audio_speech_handler(req: Request<Body>) -> Response<Body> {
         .header("Access-Control-Allow-Origin", "*")
         .header("Access-Control-Allow-Methods", "*")
         .header("Access-Control-Allow-Headers", "*")
-        .header("Content-Type", "application/json")
-        .body(Body::from(s));
+        .header("Content-Type", "audio/wav")
+        .header("Content-Disposition", "attachment; filename=audio.wav")
+        .body(Body::from(audio_buffer));
 
     let res = match result {
         Ok(response) => response,
