@@ -86,15 +86,10 @@ This project is a RESTful API server that creates an audio from a text based on 
       "response_format": "wav",
       "speed": 1.0
     }'
+    --output test.wav
   ```
 
-  If the request is successful, you will receive a response like this:
-
-  ```json
-  {"id":"file_ee61934f-090f-4397-8e52-4ebb7d490c87","bytes":88224,"created_aename":"output.wav","object":"file","purpose":"assistants_output"}
-  ```
-
-  The generated "output.wav" file is located in the `./archives/file_ee61934f-090f-4397-8e52-4ebb7d490c87` directory.
+  If the request is successful, the generated audio file will be saved as `test.wav`.
 
 ## Build
 
