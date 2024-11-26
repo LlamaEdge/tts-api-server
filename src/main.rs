@@ -13,6 +13,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server,
 };
+#[cfg(feature = "piper")]
 use llama_core::metadata::piper::PiperMetadata;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, path::PathBuf};
@@ -72,24 +73,27 @@ async fn main() -> Result<(), ServerError> {
     // log the version of the server
     info!(target: "stdout", "Whisper API Server v{}", env!("CARGO_PKG_VERSION"));
 
-    // log model name
-    info!(target: "stdout", "model name: {}", &cli.model_name);
+    #[cfg(feature = "piper")]
+    {
+        // log model name
+        info!(target: "stdout", "model name: {}", &cli.model_name);
 
-    // log model path
-    info!(target: "stdout", "model path: {}", cli.model.display());
+        // log model path
+        info!(target: "stdout", "model path: {}", cli.model.display());
 
-    // log voice config path
-    info!(target: "stdout", "voice config path: {}", cli.config.display());
+        // log voice config path
+        info!(target: "stdout", "voice config path: {}", cli.config.display());
 
-    // log espeak-ng data directory
-    info!(target: "stdout", "espeak-ng data directory: {}", cli.espeak_ng_dir.display());
+        // log espeak-ng data directory
+        info!(target: "stdout", "espeak-ng data directory: {}", cli.espeak_ng_dir.display());
 
-    // create a default metadata
-    let metadata = PiperMetadata::default();
+        // create a default metadata
+        let metadata = PiperMetadata::default();
 
-    // init the piper context
-    llama_core::init_piper_context(&metadata, cli.model, cli.config, cli.espeak_ng_dir)
-        .map_err(|e| ServerError::Operation(e.to_string()))?;
+        // init the piper context
+        llama_core::init_piper_context(&metadata, cli.model, cli.config, cli.espeak_ng_dir)
+            .map_err(|e| ServerError::Operation(e.to_string()))?;
+    }
 
     // socket address
     let addr = match cli.socket_addr {
