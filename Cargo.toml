@@ -14,16 +14,10 @@ multipart-2021 = "0.19.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1"
-tokio = { version = "^1.36", features = [
-    "io-util",
-    "fs",
-    "net",
-    "time",
-    "rt",
-    "macros",
-] }
+tokio = { version = "^1.36", features = ["io-util", "fs", "net", "time", "rt", "macros"] }
 uuid = { version = "1.4", features = ["v4", "fast-rng", "macro-diagnostics"] }
 wasi-logger = { version = "0.1.2", features = ["kv"] }
+once_cell = "1.18"
 
 [features]
 default = ["piper"]

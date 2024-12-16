@@ -15,6 +15,7 @@ use hyper::{
 };
 #[cfg(feature = "piper")]
 use llama_core::metadata::piper::PiperMetadata;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, path::PathBuf};
 use tokio::net::TcpListener;
@@ -23,6 +24,9 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // default port
 const DEFAULT_PORT: &str = "8080";
+
+// API key
+pub(crate) static LLAMA_API_KEY: OnceCell<String> = OnceCell::new();
 
 #[derive(Debug, Parser)]
 #[command(name = "Whisper API Server", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "Whisper API Server")]
@@ -66,6 +70,19 @@ async fn main() -> Result<(), ServerError> {
     // set global logger
     wasi_logger::Logger::install().expect("failed to install wasi_logger::Logger");
     log::set_max_level(log_level.into());
+
+    info!(target: "stdout", "log_level: {}", log_level);
+
+    if let Ok(api_key) = std::env::var("API_KEY") {
+        // define a const variable for the API key
+        if let Err(e) = LLAMA_API_KEY.set(api_key) {
+            let err_msg = format!("Failed to set API key. {}", e);
+
+            error!(target: "stdout", "{}", err_msg);
+
+            return Err(ServerError::Operation(err_msg));
+        }
+    }
 
     // parse the command line arguments
     let cli = Cli::parse();
@@ -132,6 +149,29 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Err
     path_iter.next(); // Must be Some(OsStr::new(&path::MAIN_SEPARATOR.to_string()))
     let root_path = path_iter.next().unwrap_or_default();
     let root_path = "/".to_owned() + root_path.to_str().unwrap_or_default();
+
+    // check if the API key is valid
+    if let Some(auth_header) = req.headers().get("authorization") {
+        if !auth_header.is_empty() {
+            let auth_header = match auth_header.to_str() {
+                Ok(auth_header) => auth_header,
+                Err(e) => {
+                    let err_msg = format!("Failed to get authorization header: {}", e);
+                    return Ok(error::unauthorized(err_msg));
+                }
+            };
+
+            let api_key = auth_header.split(" ").nth(1).unwrap_or_default();
+            info!(target: "stdout", "API Key: {}", api_key);
+
+            if let Some(stored_api_key) = LLAMA_API_KEY.get() {
+                if api_key != stored_api_key {
+                    let err_msg = "Invalid API key.";
+                    return Ok(error::unauthorized(err_msg));
+                }
+            }
+        }
+    }
 
     // log request
     {

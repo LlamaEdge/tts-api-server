@@ -3051,6 +3051,7 @@ dependencies = [
  "llama-core",
  "log 0.4.22",
  "multipart-2021",
+ "once_cell",
  "serde",
  "serde_json",
  "thiserror",
