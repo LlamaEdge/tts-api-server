@@ -17,10 +17,13 @@ use hyper::{
 use llama_core::metadata::piper::PiperMetadata;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use std::{net::SocketAddr, path::PathBuf};
+use std::{collections::HashMap, net::SocketAddr, path::PathBuf};
 use tokio::net::TcpListener;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+// server info
+pub(crate) static SERVER_INFO: OnceCell<ApiServer> = OnceCell::new();
 
 // default port
 const DEFAULT_PORT: &str = "8080";
@@ -90,11 +93,11 @@ async fn main() -> Result<(), ServerError> {
     // log the version of the server
     info!(target: "stdout", "Whisper API Server v{}", env!("CARGO_PKG_VERSION"));
 
+    // log model name
+    info!(target: "stdout", "model name: {}", &cli.model_name);
+
     #[cfg(feature = "piper")]
     {
-        // log model name
-        info!(target: "stdout", "model name: {}", &cli.model_name);
-
         // log model path
         info!(target: "stdout", "model path: {}", cli.model.display());
 
@@ -117,6 +120,22 @@ async fn main() -> Result<(), ServerError> {
         Some(addr) => addr,
         None => SocketAddr::from(([0, 0, 0, 0], cli.port)),
     };
+
+    // create server info
+    let tts_model = ModelConfig {
+        name: cli.model_name,
+        ty: "tts".to_string(),
+    };
+    let server_info = ApiServer {
+        ty: "whisper".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        port: addr.port().to_string(),
+        tts_model,
+        extras: HashMap::new(),
+    };
+    SERVER_INFO
+        .set(server_info)
+        .map_err(|_| ServerError::Operation("Failed to set `SERVER_INFO`.".to_string()))?;
 
     let new_service = make_service_fn(move |conn: &AddrStream| {
         // log socket address
@@ -193,7 +212,6 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Err
     }
 
     let response = match root_path.as_str() {
-        "/echo" => Response::new(Body::from("echo test")),
         "/v1" => backend::handle_llama_request(req).await,
         _ => error::invalid_endpoint("The requested service endpoint is not found."),
     };
@@ -293,4 +311,23 @@ impl std::str::FromStr for LogLevel {
             _ => Err(format!("Invalid log level: {}", s)),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct ApiServer {
+    #[serde(rename = "type")]
+    ty: String,
+    version: String,
+    port: String,
+    tts_model: ModelConfig,
+    extras: HashMap<String, String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub(crate) struct ModelConfig {
+    // model name
+    name: String,
+    // type: chat or embedding
+    #[serde(rename = "type")]
+    ty: String,
 }
